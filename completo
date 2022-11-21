@@ -1,0 +1,250 @@
+---
+title: "Estudio de Mercado y Rentabilidad"
+author: "MFLM"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+**Generalidades**
+Este trabajo se realiza a fines de determinar el valor de la tierra en un sector preestablecido de la ciudad de Maldonado, como asi la determinacion de una rentabilidad inmobiliaria que apunta a pequeños desarrolladores o inversionistas tanto para la venta como asi para su alquiler anual/por temporada.
+
+**Presentacion del Caso**
+
+La finalidad de este trabajo es determinar el valor del suelo de un sector determinado, como asi el valor de venta de inmuebles con edificaciones existentes para asi poder determinar la rentabilidad de dicha zona al realizar edificaciones para la venta y de esta manera poder establecer si dicha zona es financieramnete acepatable para tal fin.
+
+**Informacion utilizada**
+
+***Generalidades*** para la realizacion de este estudio se utilizaron diferentes bases de datos, las mismas fueron procesadas a traves de metodologias valuatorias, financieras y predictivas.
+
+* -1-Base de datos personal geoposicionada (Valor del Suelo "Uruguay").
+* -2-Conjuntos de datos geoespaciales correspondientes al sector catastarl (Gobierno de Uruguay, Datos Abiertos).
+* -3-Base de datos personal geoposicionada (Mercado activo "Apartamentos, Viviendas, Comercio,Industria")
+
+**Atributos de las bases de datos**
+
+|Atributo|Base de Datos|
+|---------|------------|
+|ID|Valor del Suelo|
+|Valor por metr2(U$D)|Valor del Suelo|
+|Fecha de relevamiento|Valor del Suelo|
+|Coordenadas "X"|Valor del Suelo|
+|Coordenadas "Y"|Valor del Suelo|
+|Tipo de relevamiento|Valor del Suelo|
+|Padron|Catastro Urbano|
+|Departamento|Catastro Urbano|
+|Localidad|Catastro urbano|
+|Manzana|Catastro Urbano|
+|Area|Catastro Urbano|
+|Tipologia|Mercado Activo|
+|Superficies (cub,semi,des)|Mercado Activo|
+|Fecha|Mercado Activo|
+|Tipo Operacion|Mercado Activo|
+|Fuente|Mercado Activo|
+|Caracteristicas (dividido en diferentes atributos)|Mercado Activo|
+|Antiguedad|Mercado Activo|
+|Est. Conservacion|Mercado Activo|
+|ID|Mercado Activo|
+
+**Nomenclador de Atributos**
+
+* -1-***ID***= Identificador Numerico de la Muestra.
+* -2-***Valor del Metro2***= Indica el valor por metro2 de tierra.
+* -3-***Fecha***= Indica la fecha en que se relevo la muestra.
+* -4-***Coordenadas***= Hace referencia a las coordenadas X e Y con su respectivo SRC de la ubicacion geografica de la muestra.
+* -5-***Tipo de relevamiento***= este alude a la situacion de la muestra es decir del tipo de operacion.
+* -6-***Padron***= Es el número de identificación catastral.
+* -7-***Departamento***= Departamento geografico del pais.
+* -8-***Manzana***= Identificador de manzana de la parcela.
+* -9-***Area***= Superficie de la parcela.
+* -10-***Tipologia***= Indica la tipologia edilicia y su uso.
+* -11-***Fuente***= Referencia de la fuente del relevamiento de la muestra.
+* -12-***Caracteristicas***= Indica cualidades de la muestra.
+* -13-***Antiguedad***= Indica la antiguedad de la muestra (Inmueble).
+* -14-***Est. Conservacion***= Referencia el estado actual de la muestra.
+
+**Softwares Utilizados**
+
+* -1- ***QGIS***
+* -2- ***Excel***
+* -3- ***HeidiSQL***
+* -4- ***RStudio***
+
+
+**Instalacion de Paquetes y Librerias en RStudio para tratamiento de datos**
+
+```{r setup librerias y packetes, warning=FALSE, echo=FALSE, error=FALSE} 
+library(readxl)
+muestras <- read_excel("C:/Users/Marcelo/Desktop/portfolio/Portfolio_2/muestras.xlsx")
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(tidyselect)
+library(markdown)
+library(rmarkdown)
+library(dtplyr)
+muestras_edifica <- read_excel("C:/Users/Marcelo/Desktop/portfolio/Portfolio_2/muestras_edifica.xlsx")
+PZ <- read_excel("C:/Users/Marcelo/Desktop/portfolio/PZ.xlsx")
+```
+
+Valor del Suelo.
+===================
+
+***Zona Establecida para el estudio en la valorizacion del Suelo***
+
+<center> ![](C:\Users\Marcelo\Desktop\portfolio\Portfolio_2\Mapas\Sectorcatastral.jpeg){width="600px"}</center>
+
+* **Superficie Total en estudio** = 200665,00 Metros2.
+* **Mayor superficie parcelaria registrada** = 9945,00 Metros2.
+* **Menor superficie Registrada** = 645,00 Metros2.
+* **Cantidad de parcelas sometidas a estudio** = 147.
+
+***Muestras, Tratamiento y procesos***
+
+En la base de datos contamos con un tamaño muestras de 132 muestras, por lo que falta determinar el valor de 15 muestras, para poder realizar la valoracion de estas parcelas faltantes se realizo un geoproceso en QGIS, el cual es llamado "INTERPOLACION IDW", este geoproceso consiste en establecer valores desconocidos a traves de valores conocidos (Muestras), con este proceso obtenemos un raster el cual luego es cortado por la capa de mascara la cual es el sector parcelario en estudio, el siguiente paso es general una nube de puntos a partir de la capa catastral, esta nube de puntos servira para la extraccion de los pixeles valorizados en el raster generado en el paso anterior, para luego asi poder establecer el valor de las 15 parcelas sin valorizar; una vez terminado este proceso se procede a  la union de capas catastrales con la capa del total de muestras valorizadas, se genera un nuevo atributo en el cual se calculara el valor total de la parcela en funcion del valor del metro2.
+
+<center> ![](C:\Users\Marcelo\Desktop\portfolio\Portfolio_2\Mapas\Raster.jpeg){width="600px"}</center>
+<center> ![](C:\Users\Marcelo\Desktop\portfolio\Portfolio_2\Mapas\valorsup.jpeg){width="600px"}</center>
+
+```{r, echo=FALSE}
+ggplot(muestras, aes(id,Valor))+geom_line(linetype=1)+geom_point(col="red")+ labs(title = "Valor del Metro2 _ ID de Muestras_por fecha de relevamiento")+ facet_grid(.~Fecha)
+```
+
+* **Valorizacion total sector en estudio** = 15.728.826,00 U$D.
+* **Mayor valor registrado por metro2_por parcela** = 118,86 _ 664.080,00 U$D.
+* **Menor valor registrado por metro2_por parcela** = 50,12 _  46.892,00 U$D.
+* **Cantidad de parcelas sometidas a estudio** = 147.
+
+Ya contamos con el total de las parcelas valorizas!!
+
+Mercado de inmuebles (Edificados)
+=================================
+
+Se realizo un relevamiento del mercado actual en la zona sometida a analisis, de este relevamiento surgieron 22 muestras, para la homologacion de aquellas muestras que presentaban una antiguedad > a 0 años sus edificacionesfueron sometidas a un calculo matematico inverso bajo la metodlogia de ***DEMERITO FITTO Y CORVINNI***, de esta manera se logro obtener un valor edilicio ajustato como si fuese una edificacion nueva.
+
+<center> ![](C:\Users\Marcelo\Desktop\portfolio\Portfolio_2\Mapas\levantamiento.jpeg){width="600px"}</center>
+
+```{r, warning=TRUE, echo=FALSE, error=TRUE}
+ggplot(muestras_edifica, aes(id,ValorAjus))+ geom_line(linetype=1) + geom_point(col="red") + labs(title = "Valor de Mercado Vivienda _ ID de Muestras- Clasificado por antiguedad")+ facet_grid(.~antigüedad)
+```
+
+|Indicador|Valor U$D|
+|----------|----------|
+|Media|1898|
+|Minimo|1366|
+|Maximo|2831|
+
+Como podemos apreciar en la tabla superiror encontramos estos parametros de venta neta sobre las mejoras plantadas en las parcelas.
+
+|Indicador|Superficie Edificada|
+|----------|----------|
+|Media|141,70|
+|Minimo|65,00|
+|Maximo|220,00|
+
+|Indicador|Superficie de parcelas|
+|----------|----------|
+|Media|599,60|
+|Minimo|300,00|
+|Maximo|1000,00|
+
+Planteo de proyecto para analizar la rentabilidad (Venta).
+=================================================
+
+Trabajando en base a los datos obtenidos al relevamiento de viviendas, trabajaremos con un supuesto hipotetico de una parcela con una superficie de 600,00 Metros2, al existir la posibilidad de aprovechamiento edilicio en la parcela la misma es sometida a Regimen de Propiedad Horizontal, de esta manera se obtiene dos ***VIVIENDAS UNIFAMILIARES TIPO DUPLEX*** (Sitema constructivo tradicional), cuya superficie edificada por unidad es de 100,00 Metros2 y 12 Metros semicubiertos, con una composicion ambiental distribuida de la siguiente manera = 
+
+* P.B = Cocina, baño de cortesia, sala de estar.
+* P.A = 2 Dormitorios uno de ellos en suit, un baño principal, balcon.
+
+<center> ![Render "Ilustrativo"](C:\Users\Marcelo\Desktop\portfolio\Portfolio_2\2.jpg){width="500px"}</center>
+
+Para la determinacion del coste de la construccion se recurrio a dos Arquitectos de la zona, ademas se ingreso a datos oficiales por parte del gobierno los cuales tuvieron que ser actualizados por indices inflacionarios ya que el costo expuesto por dicha entidad no es actual, si no que hace referencia al año 2019. El resultante del coste de construccion ontenida tras el estudio realizado es de 1300,00 U$D por metro2 ***LLAVE EN MANO***
+
+Para la determinacion del valor de la parcela de procedera a tomar las muestras resultantes de este estudio (Valor del Suelo) siendo esta de una tamaño muestral de 147 muestras, las cuales son sometidas a ***UNA PRUEBA Z*** se tomara como rango de la prueba z 0,5 desviaciones estandar positivas y 0.5 desviaciones estandar negativa, esta prueba se establece para descartar aquellas muestras muestras outlier, sobre las muestras aptas se calculara la media y la resultante de ella se aplicara para determinar el valor de la parcela. 
+
+$(Valor-Media)/Desviacion estandar = Puntaje Z$
+
+$1- DistR.NORM((Promedio(matriz)- media) / (sigma/√n),VERDADERO).$
+
+**la funcion superior deveulve el valor P de una cola de una prueba Z**
+
+El sieguiente paso es formular la prueba logica donde se establece que si la puntuacion arrojada es > = a 0,5 SD no es apta de lo contrario si, lo mismo se aplica a la puntuacion 0,5 negativa es decir <= -0,5 no es apto de lo contrario si.
+
+```{r, warning=TRUE, echo=FALSE, error=TRUE}
+ggplot(PZ, aes(Valor,Zscore))+ geom_point(col="red")+labs(title = "Zscore_Valor de Muestras_147 Observaciones")
+```
+
+
+<CENTER>***EL VALOR RESULTANTE DE LA MEDIA TRAS LA PRUEBA Z CON UN CONTEO MUESTRAL DE 74 MUESTRAS APTAS ES DE 81,36 u$s POR METRO2 DE SUELO***</CENTER>
+
+Considerando de esta manera que la parcela tiene una superficie de 600 metros2 y se edificaran dos unidades de 106,00 Metros 2 Homologados, estamos frente a un coste de inversion de 324.416,00 U$D, con una plazo de ejecucion de 6 meses. A este valor le sumaremos el ***COSTE DE OPORTUNIDAD*** este se basara en una inversion tradicional ***PLAZO FIJO***
+
+$interes.cada.pago.mensual*plazo.inversion/(12/12)=1216,56$
+
+$TAE=(1 + r/f)^f-1=0,8%$
+
+
+$324.416,00(CAPITAL)+1216.56(COSTE.DE.OPORTUNIDAD)= 325.632,56 (INVERSION.TOTAL)$
+
+En este punto ya obtuvimos el coste total de la inversion mas el coste de oportunidad, ahora se procedera a analizar el valor de mercado del proyecto para asi poder obtener una rentabilidad estimada.
+Trabajando con la media de las muestras podemos establecer que un lote de 600 metros2 mas dos unidades tipo duplex obtenemos un valor total de venta de 445.138,00 U$D.
+
+Con estos datos pasamos a calcular el ***ROI(Return On Investment)***
+
+$(retorno-inversion)/inversion$
+$(445.138,00-325.632,56)/325.632,56=0,367$ 
+
+
+<CENTER>***LO CUAL NOS INDICA UNA RENTABILIDAD DEL 36.69%***</CENTER>
+
+
+Rentabilidad por locacion.
+==========================
+
+* 1-Tras analizar el mercado de alquiler anual se establece una media locativa para viviendas simil al proyecto planteado de 950,0 U$D.
+
+* 2-Tras el analisis se establece en temporada vacacional un valor locativo diario de 100 U$D.
+
+**Determinacion de la tasa de renta anual**
+
+
+$(Renta/valor.inmueble)*100 = K1$
+
+$K1*12/100$
+
+<CENTER>***La tasa de renta bruta anual es del 5.12%***</CENTER>
+
+
+**Determinacion de la tasa de renta temporada**
+
+
+$valor.diario*30$
+
+$(Renta/valor.inmueble)*100 = K1$
+
+$K1*3/100$
+
+$K1*12/100$
+
+<CENTER>***Considerando que los 3 meses temporada el inmueble permanece ocupada se ovtiene una tasa de renta bruta por el periodo de 3 meses de 4,04%, si esta se mantuviese constante durante los 12 meses tendriamos una tasa de 16,18%***</CENTER>
+
+
+
+Resumen de rentabilidates.
+=========================
+
+|***Operacion***|**Rentabilidad %**|
+|------------------|----------------
+|*Venta*|36,96|
+|*Locacion anual*|5,12|
+|*Locacion temporada (3 meses)*|4.04|
+|*Locacion temporada (12 meses)*|16.18|
+
+
+
+
+
+
+
